@@ -6,7 +6,6 @@
 
 name: build-main
 on:
-  workflow_dispatch:
   repository_dispatch:
     types: [release-main]
 
@@ -16,17 +15,14 @@ concurrency:
 jobs:
   build:
     timeout-minutes: 1440
-    runs-on: main
+    runs-on: ubuntu-22.04
     steps:
       - uses: hmarr/debug-action@v2
         name: debug
       - name: get current branch as it may not be 'default branch;
         id: branch
         run: |
-            branch_arg="${{ github.event.client_payload.branch }}"
-            if [[ -z "$branch_arg" ]]; then
-              branch_arg="$GITHUB_REF_NAME"
-            fi
+            branch_arg="$GITHUB_REF_NAME"
             echo "branch=$branch_arg" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v3
         name: checkout
@@ -54,7 +50,6 @@ jobs:
             set -e
             CUSTOM_VERSION="${{ steps.version.outputs.version }}" DOCKER_WORK_DIR="/work" DOCKER_EXTRA_OPTS="-v /buildroot:/buildroot" make docker-world >/tmp/build.log 2>&1
       - name: Create release as draft at first to hide during uploads
-        if: github.event.action == 'release-main'
         uses: ncipollo/release-action@v1
         with:
           tag: "${{ steps.version.outputs.version }}"
@@ -167,6 +162,5 @@ jobs:
           artifacts: "release/*"
           prerelease: false
           draft: true
-          token: ${{ secrets.REPO_ACCESS }}
-          owner: JustEnoughLinuxOS
-          repo: distribution
+          owner: jhcpokemon
+          repo: jelos
